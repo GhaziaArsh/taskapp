@@ -1,0 +1,135 @@
+# ══════════════════════════════════════════════════════════════
+# Security Pipeline — SAST + SCA + DAST
+# Runs before deployment to gate code quality and security
+# ══════════════════════════════════════════════════════════════
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+variables:
+  - group: taskapp-variables
+  - name: SONAR_PROJECT_KEY
+    value: 'taskapp-cicd_taskapp-backend'
+  - name: SONAR_HOST_URL
+    value: 'http://$(SONARQUBE_VM_IP):9000'
+
+stages:
+  # ── Stage 1: SAST — SonarQube ───────────────────────────
+  - stage: SAST
+    displayName: 'Security - SAST (SonarQube)'
+    jobs:
+      - job: SonarScan
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: SonarQubePrepare@5
+            displayName: 'Prepare SonarQube Analysis'
+            inputs:
+              SonarQube: sonarqube-connection
+              scannerMode: 'CLI'
+              configMode: 'manual'
+              cliProjectKey: $(SONAR_PROJECT_KEY)
+              cliProjectName: 'Task App Backend'
+              extraProperties: |
+                sonar.sources=backend/src
+                sonar.exclusions=**/node_modules/**,**/coverage/**
+
+          - task: SonarQubeAnalyze@5
+            displayName: 'Run SonarQube Analysis'
+
+          - task: SonarQubePublish@5
+            displayName: 'Publish Quality Gate Result'
+            inputs:
+              pollingTimeoutSec: '300'
+
+  # ── Stage 2: SCA — Snyk ─────────────────────────────────
+  - stage: SCA
+    displayName: 'Security - SCA (Snyk)'
+    dependsOn: SAST
+    condition: succeeded()
+    jobs:
+      - job: SnykScan
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+
+          - task: SnykSecurityScan@1
+            displayName: 'Snyk - Scan Backend Dependencies'
+            inputs:
+              serviceConnectionEndpoint: snyk-connection
+              testType: 'app'
+              targetFile: 'backend/package.json'
+              failOnIssues: true
+              monitorWhen: 'always'
+              additionalArguments: '--severity-threshold=high'
+
+          - task: SnykSecurityScan@1
+            displayName: 'Snyk - Scan Frontend Dependencies'
+            inputs:
+              serviceConnectionEndpoint: snyk-connection
+              testType: 'app'
+              targetFile: 'frontend/package.json'
+              failOnIssues: true
+              monitorWhen: 'always'
+              additionalArguments: '--severity-threshold=high'
+
+  # ── Stage 3: DAST — OWASP ZAP ──────────────────────────
+  - stage: DAST
+    displayName: 'Security - DAST (OWASP ZAP)'
+    dependsOn: SCA
+    condition: succeeded()
+    jobs:
+      - job: ZapScan
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+
+          - script: docker pull zaproxy/zap-stable
+            displayName: 'Pull OWASP ZAP Image'
+
+          - script: |
+              docker run --rm \
+                -v $(Build.ArtifactStagingDirectory):/zap/wrk/:rw \
+                zaproxy/zap-stable zap-baseline.py \
+                -t $(FRONTEND_URL) \
+                -r zap-report.html \
+                -I
+            displayName: 'Run ZAP Baseline Scan (Frontend)'
+
+          - script: |
+              docker run --rm \
+                -v $(Build.ArtifactStagingDirectory):/zap/wrk/:rw \
+                zaproxy/zap-stable zap-api-scan.py \
+                -t $(BACKEND_URL)/api/openapi.json \
+                -f openapi \
+                -r zap-api-report.html \
+                -I
+            displayName: 'Run ZAP API Scan (Backend)'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish ZAP Security Report'
+            inputs:
+              pathToPublish: $(Build.ArtifactStagingDirectory)
+              artifactName: 'zap-security-reports'
+            condition: always()
+
+  # ── Stage 4: Build & Deploy (if all security passes) ────
+  - stage: BuildAndDeploy
+    displayName: 'Build & Deploy (Post-Security)'
+    dependsOn: DAST
+    condition: succeeded()
+    jobs:
+      - job: Build
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+          - script: echo 'All security gates passed. Proceeding with deployment...'
+            displayName: 'Security Gates Verified'

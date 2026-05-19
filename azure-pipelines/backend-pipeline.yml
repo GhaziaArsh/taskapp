@@ -1,0 +1,97 @@
+# ══════════════════════════════════════════════════════════════
+# Backend CI/CD Pipeline
+# Triggers on changes to the backend/ folder on main or develop
+# ══════════════════════════════════════════════════════════════
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - backend/**
+
+variables:
+  - group: taskapp-variables
+  - name: imageTag
+    value: $(Build.BuildId)
+
+stages:
+  # ── Stage 1: Build & Push Docker Image ──────────────────
+  - stage: Build
+    displayName: 'Build and Push Docker Image'
+    jobs:
+      - job: BuildJob
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+
+          - task: Docker@2
+            displayName: 'Login to ACR'
+            inputs:
+              command: login
+              containerRegistry: acr-service-connection
+
+          - task: Docker@2
+            displayName: 'Build Backend Image'
+            inputs:
+              command: build
+              repository: $(BACKEND_IMAGE_NAME)
+              dockerfile: backend/Dockerfile
+              buildContext: backend/
+              tags: |
+                $(imageTag)
+                latest
+
+          - task: Docker@2
+            displayName: 'Push Backend Image to ACR'
+            inputs:
+              command: push
+              repository: $(BACKEND_IMAGE_NAME)
+              containerRegistry: acr-service-connection
+              tags: |
+                $(imageTag)
+                latest
+
+  # ── Stage 2: Deploy to Dev (from develop branch) ────────
+  - stage: DeployDev
+    displayName: 'Deploy to Development'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: DeployDevJob
+        environment: 'development'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebAppContainer@1
+                  displayName: 'Deploy Backend to Dev App Service'
+                  inputs:
+                    azureSubscription: $(AZURE_SUBSCRIPTION)
+                    appName: $(BACKEND_APP_NAME)-dev
+                    containers: $(DOCKER_REGISTRY)/$(BACKEND_IMAGE_NAME):$(imageTag)
+
+  # ── Stage 3: Deploy to Prod (from main branch) ─────────
+  - stage: DeployProd
+    displayName: 'Deploy to Production'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProdJob
+        environment: 'production'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebAppContainer@1
+                  displayName: 'Deploy Backend to Prod App Service'
+                  inputs:
+                    azureSubscription: $(AZURE_SUBSCRIPTION)
+                    appName: $(BACKEND_APP_NAME)
+                    containers: $(DOCKER_REGISTRY)/$(BACKEND_IMAGE_NAME):$(imageTag)

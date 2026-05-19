@@ -1,0 +1,10 @@
+# ══════════════════════════════════════════════════════════════
+# Example Terraform Variables — COPY to terraform.tfvars
+# Replace placeholder values with your actual configuration
+# ══════════════════════════════════════════════════════════════
+
+acr_name           = "acrtaskappmyname"
+backend_app_name   = "app-taskapp-backend-myname"
+sql_server_name    = "sql-taskapp-myname"
+sql_admin_user     = "sqladmin"
+sql_admin_password = "YourStrongPassword123!"
