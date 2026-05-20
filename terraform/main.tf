@@ -13,7 +13,7 @@ terraform {
   }
   backend "azurerm" {
     resource_group_name  = "rg-terraform-state"
-    storage_account_name = "sttfstateyourname"
+    storage_account_name = "sttfstateghazia"
     container_name       = "tfstate"
     key                  = "taskapp.tfstate"
   }
@@ -26,7 +26,7 @@ provider "azurerm" {
 # ─── Resource Group ──────────────────────────────────────────
 resource "azurerm_resource_group" "main" {
   name     = var.resource_group_name
-  location = var.location
+  location = "centralindia"
   tags     = var.tags
 }
 
@@ -34,7 +34,7 @@ resource "azurerm_resource_group" "main" {
 resource "azurerm_container_registry" "acr" {
   name                = var.acr_name
   resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  location            = "southeastasia"
   sku                 = "Basic"
   admin_enabled       = true
   tags                = var.tags
@@ -44,7 +44,7 @@ resource "azurerm_container_registry" "acr" {
 resource "azurerm_mssql_server" "sql" {
   name                         = var.sql_server_name
   resource_group_name          = azurerm_resource_group.main.name
-  location                     = azurerm_resource_group.main.location
+  location                     = "southeastasia"
   version                      = "12.0"
   administrator_login          = var.sql_admin_user
   administrator_login_password = var.sql_admin_password
@@ -71,7 +71,7 @@ resource "azurerm_mssql_database" "db" {
 resource "azurerm_service_plan" "plan" {
   name                = "asp-taskapp-${var.environment}"
   resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  location            = "southeastasia"
   os_type             = "Linux"
   sku_name            = "B1"
   tags                = var.tags
@@ -81,7 +81,7 @@ resource "azurerm_service_plan" "plan" {
 resource "azurerm_linux_web_app" "backend" {
   name                = var.backend_app_name
   resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  location            = "southeastasia"
   service_plan_id     = azurerm_service_plan.plan.id
   tags                = var.tags
 
@@ -105,12 +105,25 @@ resource "azurerm_linux_web_app" "backend" {
   }
 }
 
-# ─── Static Web App (Frontend) ──────────────────────────────
-resource "azurerm_static_web_app" "frontend" {
-  name                = "stapp-taskapp-frontend"
+# ─── Frontend App Service ───────────────────────────────────
+resource "azurerm_linux_web_app" "frontend" {
+  name                = "app-taskapp-frontend-ghazia"
   resource_group_name = azurerm_resource_group.main.name
-  location            = var.location
-  sku_tier            = "Free"
-  sku_size            = "Free"
+  location            = "southeastasia"
+  service_plan_id     = azurerm_service_plan.plan.id
   tags                = var.tags
+
+  site_config {
+    application_stack {
+      docker_image_name   = "${azurerm_container_registry.acr.login_server}/taskapp-frontend:latest"
+      docker_registry_url = "https://${azurerm_container_registry.acr.login_server}"
+    }
+  }
+
+  app_settings = {
+    DOCKER_REGISTRY_SERVER_URL      = "https://${azurerm_container_registry.acr.login_server}"
+    DOCKER_REGISTRY_SERVER_USERNAME = azurerm_container_registry.acr.admin_username
+    DOCKER_REGISTRY_SERVER_PASSWORD = azurerm_container_registry.acr.admin_password
+    WEBSITES_PORT                   = "80"
+  }
 }

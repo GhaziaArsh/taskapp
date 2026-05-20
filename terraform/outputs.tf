@@ -11,7 +11,7 @@ output "backend_url" {
 }
 
 output "frontend_url" {
-  value = "https://${azurerm_static_web_app.frontend.default_host_name}"
+  value = "https://${azurerm_linux_web_app.frontend.default_hostname}"
 }
 
 output "sql_server_fqdn" {
