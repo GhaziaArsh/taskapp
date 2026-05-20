@@ -1,124 +1,69 @@
-# 🚀 TaskApp — Enterprise Azure CI/CD Lab Project
+# 🚀 TaskApp Enterprise CI/CD Lab Submission
+**Student:** Ghazia Arsh
+**GitHub Repository:** [https://github.com/GhaziaArsh/taskapp](https://github.com/GhaziaArsh/taskapp)
 
-> Production-grade full-stack application deployed on Azure with containerization, Azure DevOps Pipelines, and DevSecOps practices.
-
-## 📋 Architecture
-
-| Layer | Technology | Azure Service |
-|-------|-----------|---------------|
-| Frontend | React.js (Static Build) | Azure Static Web App |
-| Backend API | Node.js + Express (Dockerized) | Azure App Service (Container) |
-| Database | SQL Server | Azure SQL (Serverless) |
-| Container Registry | Docker Images | Azure Container Registry (Basic) |
-| CI/CD | YAML Pipelines | Azure DevOps |
-| Source Control | Git (Git Flow) | Azure Repos |
-
-## 🏗️ Project Structure
-
-```
-taskapp/
-├── frontend/                    # React application
-│   ├── src/
-│   ├── public/
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   └── package.json
-├── backend/                     # Node.js + Express REST API
-│   ├── src/
-│   │   ├── config/database.js
-│   │   ├── routes/tasks.js
-│   │   ├── routes/health.js
-│   │   └── index.js
-│   ├── Dockerfile
-│   ├── .env.example
-│   └── package.json
-├── db/
-│   └── schema.sql               # Database initialization
-├── terraform/                   # Infrastructure as Code
-│   ├── main.tf
-│   ├── variables.tf
-│   └── outputs.tf
-├── azure-pipelines/             # CI/CD Pipeline Definitions
-│   ├── backend-pipeline.yml
-│   ├── frontend-pipeline.yml
-│   └── security-pipeline.yml
-└── README.md
-```
-
-## 🚀 Quick Start (Local Development)
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/<YOUR-USERNAME>/taskapp.git
-cd taskapp
-
-# 2. Install backend dependencies
-cd backend && npm install && cd ..
-
-# 3. Install frontend dependencies
-cd frontend && npm install && cd ..
-
-# 4. Start the backend (runs on port 3001)
-cd backend && npm run dev
-
-# 5. Start the frontend (runs on port 3000, in another terminal)
-cd frontend && npm start
-```
-
-## 🐳 Docker Commands
-
-```bash
-# Build backend image
-docker build -t taskapp-backend:local ./backend
-
-# Build frontend image
-docker build --build-arg REACT_APP_API_URL=http://localhost:3001 -t taskapp-frontend:local ./frontend
-
-# Run backend
-docker run -p 3001:3001 --env-file ./backend/.env taskapp-backend:local
-
-# Run frontend
-docker run -p 8080:80 taskapp-frontend:local
-```
-
-## ☁️ Azure Resources Provisioned
-
-- **Resource Group**: `rg-taskapp-student-yourname`
-- **Container Registry**: `acrtaskappyourname`
-- **SQL Server**: `sql-taskapp-yourname`
-- **App Service**: `app-taskapp-backend-yourname`
-- **Static Web App**: `stapp-taskapp-frontend`
-
-## 🔐 Security Pipeline
-
-| Stage | Tool | Purpose |
-|-------|------|---------|
-| SAST | SonarQube | Static code analysis for vulnerabilities |
-| SCA | Snyk | Dependency vulnerability scanning |
-| DAST | OWASP ZAP | Dynamic application security testing |
-
-## 📊 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/tasks` | List all tasks |
-| GET | `/api/tasks/stats` | Task statistics |
-| POST | `/api/tasks` | Create a task |
-| PUT | `/api/tasks/:id` | Update a task |
-| PATCH | `/api/tasks/:id/status` | Quick status change |
-| DELETE | `/api/tasks/:id` | Delete a task |
-
-## 🌿 Git Flow Branching
-
-```
-main ────────────────────────────────── Production
-  └── develop ───────────────────────── Integration
-       ├── feature/dockerize-app ────── Feature work
-       ├── feature/azure-pipeline ───── Feature work
-       └── release/v1.0.0 ──────────── Release prep
-```
+## 📌 Project Overview
+This project demonstrates a complete production-grade full-stack application deployed on Microsoft Azure using containerization, Azure DevOps CI/CD pipelines, and DevSecOps best practices. 
 
 ---
 
-**Built for**: DevOps Training Lab — Enterprise Azure CI/CD Project
+## 1️⃣ Core Lab Completion Evidence
+
+### 1. Source Control & Branching (Git Flow)
+The repository has been successfully imported into Azure Repos and follows the Git Flow branching strategy (`main`, `develop`, and `feature/*` branches). 
+
+### 2. Docker Containerization
+Multi-stage `Dockerfile`s have been created for both the frontend (React) and backend (Node.js) to ensure optimized, production-ready images.
+*(Include Screenshot of Dockerfiles in Azure Repos here)*
+
+### 3. Azure Infrastructure Provisioning
+The following resources were provisioned in the `rg-taskapp-student-ghazia` resource group:
+- **Azure Container Registry (ACR)**: Built images `taskapp-frontend` and `taskapp-backend` are stored here.
+- **Azure SQL Database**: Serverless database configured with the `db-taskapp` schema.
+- **Azure App Service**: Hosts the Dockerized backend API.
+- **Azure Static Web App**: Hosts the React frontend.
+*(Include Screenshot of Azure Portal showing the Resource Group and resources here)*
+
+### 4. Azure DevOps CI/CD Pipelines
+Multi-stage YAML pipelines (`backend-pipeline.yml` and `frontend-pipeline.yml`) were built and registered in Azure DevOps. The pipelines successfully:
+1. Build the Docker images.
+2. Push the images to Azure Container Registry (ACR).
+3. Deploy to the Development environment.
+4. Wait for a manual approval gate before deploying to Production.
+*(Include Screenshot of successful pipeline run with green checkmarks here)*
+
+### 5. Live Application
+The application is fully functional. The React frontend successfully communicates with the Node.js backend and the Azure SQL Database.
+- **Live URL:** `[PASTE YOUR STATIC WEB APP URL HERE]`
+*(Include Screenshot of the working application UI here)*
+
+---
+
+## 2️⃣ Extra Mile: DevSecOps & IaC Evidence
+
+### Infrastructure as Code (Terraform)
+All Azure resources were defined using Terraform, with state managed remotely via Azure Blob Storage.
+*(Include Screenshot of `taskapp.tfstate` in Azure Storage here)*
+
+### SAST with SonarQube
+A SonarQube server was provisioned via Docker on an Azure Linux VM. The pipeline integrates a custom Quality Gate ("TaskApp Enterprise Gate") that blocks deployment if vulnerabilities are found.
+*(Include Screenshot of SonarQube Dashboard here)*
+
+### SCA with Snyk
+Snyk was integrated into the pipeline to scan the `package.json` dependencies for known open-source vulnerabilities prior to deployment.
+*(Include Screenshot of Snyk Scan Results in Azure DevOps here)*
+
+### DAST with OWASP ZAP
+OWASP ZAP runs a baseline scan on the frontend and an API scan on the backend after deployment. 
+
+**Top Vulnerabilities Found & Remediation:**
+1. **Missing Anti-clickjacking Header:** 
+   - *Remediation:* Add `X-Frame-Options: DENY` to the backend Express configuration.
+2. **Cookie No HttpOnly Flag:**
+   - *Remediation:* Ensure all session cookies are set with `HttpOnly; Secure` attributes in the Node.js API.
+3. **Cross-Domain Misconfiguration:**
+   - *Remediation:* Restrict CORS headers in `index.js` to only allow the specific Static Web App domain instead of `*`.
+*(Include Screenshot of ZAP HTML Report here)*
+
+---
+*Document generated for final lab verification.*

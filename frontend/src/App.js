@@ -110,7 +110,7 @@ function App() {
             <span className="search-icon">🔍</span>
             <input placeholder="Search tasks..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          {['all','todo','in-progress','completed'].map(f => (
+          {['all', 'todo', 'in-progress', 'completed'].map(f => (
             <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
               {f === 'all' ? 'All' : f === 'in-progress' ? 'In Progress' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
@@ -155,22 +155,22 @@ function App() {
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Title *</label>
-                <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="Enter task title" required />
+                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Enter task title" required />
               </div>
               <div className="form-group">
                 <label>Description</label>
-                <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Task details..." />
+                <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Task details..." />
               </div>
               <div className="form-row">
                 <div className="form-group">
                   <label>Priority</label>
-                  <select value={form.priority} onChange={e => setForm({...form, priority: e.target.value})}>
+                  <select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
                     <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
                   </select>
                 </div>
                 <div className="form-group">
                   <label>Category</label>
-                  <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
+                  <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                     <option value="general">General</option><option value="devops">DevOps</option>
                     <option value="infrastructure">Infrastructure</option><option value="security">Security</option>
                   </select>
@@ -178,7 +178,7 @@ function App() {
               </div>
               <div className="form-group">
                 <label>Due Date</label>
-                <input type="date" value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})} />
+                <input type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} />
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={closeModal}>Cancel</button>

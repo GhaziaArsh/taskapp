@@ -87,7 +87,7 @@ resource "azurerm_linux_web_app" "backend" {
 
   site_config {
     application_stack {
-      docker_image_name   = "${azurerm_container_registry.acr.login_server}/taskapp-backend:latest"
+      docker_image_name   = "taskapp-backend:latest"
       docker_registry_url = "https://${azurerm_container_registry.acr.login_server}"
     }
   }
@@ -115,7 +115,7 @@ resource "azurerm_linux_web_app" "frontend" {
 
   site_config {
     application_stack {
-      docker_image_name   = "${azurerm_container_registry.acr.login_server}/taskapp-frontend:latest"
+      docker_image_name   = "taskapp-frontend:latest"
       docker_registry_url = "https://${azurerm_container_registry.acr.login_server}"
     }
   }
